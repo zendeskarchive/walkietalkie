@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Comm test</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script charset="utf-8" src="/walkietalkie.js" type="text/javascript"></script>
+    <script charset="utf-8" src="/js/demo.js" type="text/javascript"></script>
+    <script charset="utf-8" src="/js/democanvas.js" type="text/javascript"></script>
+    <script charset="utf-8" src="/js/bootstrap.buttons.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="/css/demo.css" />
+  </head>
+  <body>
+    <header class="jumbotron subhead" id="overview">
+      <div class="container">
+        <h1>Walkie Talkie</h1>
+      </div>
+    </header>
+    <div class="container">
+      <div class="row">
+        <div class="span12">
+          <section>
+            <hr>
+            <p class="lead">
+              Walkie Talkie is a javascript lib which allows you to
+              send messages and share properties between tabs and windows of a single browser.
+            </p>
+            <p class="lead">
+              By using listeners, it's simple to receive messages and track changes
+              made to properties
+            </p>
+            <p class="lead">
+              In this demo, you can draw on the canvas below, and the changes will
+              be propagated to 2 iframes below. You can also change the output using
+              the buttons under the canvas.
+            </p>
+          </section>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12">
+          <div id="debug"></div>
+          <div id="canvas">
+            Drawable canvas
+            <div class="drawable-canvas">
+              <canvas width="465" height="300"></canvas>
+            </div>
+          </div>
+          <div id="buttons">
+            <div class="btn-group" data-toggle="buttons-radio">
+              <button data-action="left" type="button" class="btn btn-primary">Left</button>
+              <button data-action="both" type="button" class="both btn btn-primary">Both</button>
+              <button data-action="right" type="button" class=" btn btn-primary">Right</button>
+            </div>
+            <button class="btn clear">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12">
+          <div id="frames">
+            <div class="frame">
+              Window A
+              <div class="iframe">
+                <iframe frameborder="0" src="/frame.html?which=left"></iframe>
+              </div>
+            </div>
+            <div class="frame">
+              Window B
+              <div class="iframe">
+                <iframe frameborder="0" src="/frame.html?which=right"></iframe>
+              </div>
+            </div>
+          </div>
+          <div class="clearfix"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var talkie = new WalkieTalkie();
+      var pressed = false;
+      var canvas = new DemoCanvas('canvas')
+
+      function triggerClearCanvas() {
+        talkie.publish("clear");
+      }
+
+      function sendDot(e) {
+        var coords = getCursorPosition(e);
+        talkie.publish("draw", coords);
+      }
+
+      canvas.on('mousedown', function(e) { 
+        e.originalEvent.preventDefault();
+        pressed = true; 
+      });
+
+      canvas.on('mouseup', function(e) { pressed = false; });
+
+      canvas.on('mousemove', function(e) { if (pressed) { sendDot(e); } });
+
+      canvas.on('click', function(e) { sendDot(e); });
+
+      talkie.receive("draw", function(message) {
+        canvas.drawDot(message.data);
+      });
+
+      talkie.receive("clear", function(message) {
+        canvas.clearCanvas();
+      });
+
+      $('.clear').click(triggerClearCanvas);
+
+      var target = talkie.get('target') || 'both'
+      $('#buttons button[data-action="' + target + '"]').button('toggle');
+      talkie.store("target", target);
+
+      $('#buttons .btn-group button').click(function() {
+         var link = $(this);
+         var target = link.data('action');
+         talkie.store("target", target);
+      });
+
+    </script>
+  </body>
+</html>
+
